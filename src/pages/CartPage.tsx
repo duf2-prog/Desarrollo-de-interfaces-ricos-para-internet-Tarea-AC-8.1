@@ -1,0 +1,32 @@
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "../store/store";
+import Cart from "../components/Cart";
+import { removeFromCart, clearCart, sendOrder } from "../store/slices/cartSlice";
+import { reduceStock } from "../store/slices/menuSlice";
+
+export default function CartPage() {
+    const cart = useSelector((state: RootState) => state.cart.items);
+    const loading = useSelector((state: RootState) => state.cart.loading);
+    const dispatch = useDispatch<AppDispatch>();
+
+    const handleSendOrder = async () => {
+        cart.forEach(entry => {
+            dispatch(reduceStock({ id: entry.item.id, quantity: entry.quantity }));
+        });
+
+        await dispatch(sendOrder(cart));
+        dispatch(clearCart());
+    };
+
+    return (
+        <>
+            <Cart
+                cartItems={cart}
+                onRemoveItem={(id) => dispatch(removeFromCart(id))}
+                onSendOrder={handleSendOrder}
+            />
+
+            {loading && <p>Enviando pedido...</p>}
+        </>
+    );
+}
